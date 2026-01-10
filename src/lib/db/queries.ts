@@ -397,6 +397,7 @@ async function ensureLoginUsersTable() {
         user_id TEXT PRIMARY KEY,
         username TEXT,
         points INTEGER DEFAULT 0 NOT NULL,
+        is_blocked BOOLEAN DEFAULT FALSE,
         created_at TIMESTAMP DEFAULT NOW(),
         last_login_at TIMESTAMP DEFAULT NOW()
     )
@@ -487,6 +488,7 @@ export async function recordLoginUser(userId: string, username?: string | null) 
             // Ensure points column exists for existing tables
             try {
                 await db.execute(sql`ALTER TABLE login_users ADD COLUMN IF NOT EXISTS points INTEGER DEFAULT 0 NOT NULL; `);
+                await db.execute(sql`ALTER TABLE login_users ADD COLUMN IF NOT EXISTS is_blocked BOOLEAN DEFAULT FALSE; `);
             } catch {
                 // Ignore if it fails (e.g. column exists)
             }
@@ -591,6 +593,7 @@ export async function getUsers(page = 1, pageSize = 20, q = '') {
             userId: loginUsers.userId,
             username: loginUsers.username,
             points: loginUsers.points,
+            isBlocked: loginUsers.isBlocked,
             lastLoginAt: loginUsers.lastLoginAt,
             createdAt: loginUsers.createdAt,
             orderCount: sql<number>`count(CASE WHEN ${orders.status} IN ('paid', 'delivered', 'refunded') THEN 1 END)::int`
@@ -627,5 +630,17 @@ export async function updateUserPoints(userId: string, points: number) {
     await ensureLoginUsersTable();
     await db.update(loginUsers)
         .set({ points })
+        .where(eq(loginUsers.userId, userId));
+}
+
+export async function toggleUserBlock(userId: string, isBlocked: boolean) {
+    await ensureLoginUsersTable();
+    // Ensure column exists
+    try {
+        await db.execute(sql`ALTER TABLE login_users ADD COLUMN IF NOT EXISTS is_blocked BOOLEAN DEFAULT FALSE;`);
+    } catch { }
+
+    await db.update(loginUsers)
+        .set({ isBlocked })
         .where(eq(loginUsers.userId, userId));
 }

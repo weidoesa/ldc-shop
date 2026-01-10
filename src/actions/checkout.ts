@@ -18,6 +18,17 @@ export async function createOrder(productId: string, email?: string, usePoints: 
     })
     if (!product) return { success: false, error: 'buy.productNotFound' }
 
+    // 2. Check Blocked Status
+    if (user?.id) {
+        const userRec = await db.query.loginUsers.findFirst({
+            where: eq(loginUsers.userId, user.id),
+            columns: { isBlocked: true }
+        });
+        if (userRec?.isBlocked) {
+            return { success: false, error: 'buy.userBlocked' };
+        }
+    }
+
     try {
         await cancelExpiredOrders({ productId })
     } catch {

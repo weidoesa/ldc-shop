@@ -9,8 +9,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
-import { saveUserPoints } from "@/actions/admin-users"
-import { Loader2, Search, ArrowLeft, ArrowRight, Edit } from "lucide-react"
+import { saveUserPoints, toggleBlock } from "@/actions/admin-users"
+import { Loader2, Search, ArrowLeft, ArrowRight, Edit, Ban, CheckCircle } from "lucide-react"
 
 interface User {
     userId: string
@@ -19,6 +19,7 @@ interface User {
     lastLoginAt: Date | null
     createdAt: Date | null
     orderCount: number
+    isBlocked: boolean
 }
 
 interface UsersContentProps {
@@ -87,6 +88,19 @@ export function UsersContent({ data }: UsersContentProps) {
         }
     }
 
+    const handleToggleBlock = async (user: User) => {
+        const action = user.isBlocked ? 'unblock' : 'block'
+        if (!confirm(t(`admin.users.confirm${action.charAt(0).toUpperCase() + action.slice(1)}`))) return
+
+        try {
+            await toggleBlock(user.userId, !user.isBlocked)
+            toast.success(t('common.success'))
+            router.refresh()
+        } catch (e: any) {
+            toast.error(e.message || t('common.error'))
+        }
+    }
+
     const totalPages = Math.ceil(data.total / data.pageSize)
 
     return (
@@ -145,7 +159,7 @@ export function UsersContent({ data }: UsersContentProps) {
                                     <TableCell className="text-muted-foreground text-xs">
                                         {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '-'}
                                     </TableCell>
-                                    <TableCell className="text-right">
+                                    <TableCell className="text-right flex justify-end gap-2">
                                         <Button
                                             variant="outline"
                                             size="sm"
@@ -153,6 +167,14 @@ export function UsersContent({ data }: UsersContentProps) {
                                         >
                                             <Edit className="h-4 w-4 mr-2" />
                                             {t('admin.users.editPoints')}
+                                        </Button>
+                                        <Button
+                                            variant={user.isBlocked ? "default" : "destructive"}
+                                            size="sm"
+                                            onClick={() => handleToggleBlock(user)}
+                                            title={user.isBlocked ? t('admin.users.unblock') : t('admin.users.block')}
+                                        >
+                                            {user.isBlocked ? <CheckCircle className="h-4 w-4" /> : <Ban className="h-4 w-4" />}
                                         </Button>
                                     </TableCell>
                                 </TableRow>

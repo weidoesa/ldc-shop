@@ -71,6 +71,7 @@
         "outOfStock": "Product is out of stock",
         "limitExceeded": "Purchase limit exceeded. You cannot buy this product again.",
         "stockLocked": "Stock is temporarily reserved. Please try again in a minute.",
+        "userBlocked": "This product has a purchase limit for you.",
         "paymentTimeoutNotice": "Unpaid orders are automatically cancelled after 5 minutes.",
         "purchaseLimit": "Purchase limit: {{limit}}",
         "share": "Share",
@@ -257,7 +258,12 @@
             "save": "Save",
             "search": "Search users...",
             "currentPoints": "Current Points",
-            "newPoints": "New Points"
+            "newPoints": "New Points",
+            "block": "Block",
+            "unblock": "Unblock",
+            "blocked": "Blocked",
+            "confirmBlock": "Are you sure you want to block this user?",
+            "confirmUnblock": "Are you sure you want to unblock this user?"
         },
         "orders": {
             "title": "Recent Orders",

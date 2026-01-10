@@ -71,6 +71,7 @@
         "outOfStock": "商品已售罄",
         "limitExceeded": "超出限购次数，您不能再购买此商品",
         "stockLocked": "库存已被锁定，请稍后再试",
+        "userBlocked": "本商品对您已限购",
         "paymentTimeoutNotice": "未支付订单将在 5 分钟后自动取消。",
         "purchaseLimit": "限购: {{limit}}",
         "share": "分享商品",
@@ -257,7 +258,12 @@
             "save": "保存",
             "search": "搜索用户...",
             "currentPoints": "当前积分",
-            "newPoints": "新积分"
+            "newPoints": "新积分",
+            "block": "拉黑",
+            "unblock": "解封",
+            "blocked": "已拉黑",
+            "confirmBlock": "确定要拉黑该用户吗？",
+            "confirmUnblock": "确定要解封该用户吗？"
         },
         "orders": {
             "title": "最近订单",
