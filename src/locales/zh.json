@@ -317,7 +317,12 @@
             "refundProxyNotProcessed": "代理请求已返回但未确认成功；必要时请使用手动退款流程。",
             "refundVerify": "您是否已在 Linux DO Credit 后台确认退款成功？",
             "refundSuccess": "订单已标记为已退款",
-            "refundInfo": "确认退款成功后，点击【标记已退款】"
+            "refundInfo": "确认退款成功后，点击【标记已退款】",
+            "refundVerify": "您是在支付平台确认已经完成退款了吗？",
+            "checkStatus": "查询状态",
+            "verifySuccessRefunded": "验证结果：订单已退款",
+            "verifyInfoPaid": "验证结果：订单支付正常（未退款）",
+            "verifyStatus": "状态验证"
         },
         "cards": {
             "title": "库存管理",

@@ -317,7 +317,12 @@
             "refundProxyNotProcessed": "Proxy request finished but not confirmed as success; use manual flow if needed.",
             "refundVerify": "Have you verified the refund was successful in the Linux DO Credit dashboard?",
             "refundSuccess": "Order marked as refunded",
-            "refundInfo": "After verifying the refund was successful, click 'Mark Refunded'"
+            "refundInfo": "After verifying the refund was successful, click 'Mark Refunded'",
+            "refundVerify": "Have you confirmed on the payment platform that the refund is complete?",
+            "checkStatus": "Check Status",
+            "verifySuccessRefunded": "Verified: Order has been refunded.",
+            "verifyInfoPaid": "Verified: Order is Paid (Active).",
+            "verifyStatus": "Status Verified"
         },
         "cards": {
             "title": "Manage Stock",

@@ -82,19 +82,15 @@ export function RefundButton({ order }: { order: any }) {
         }
     }
 
-    return (
-        <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={handleRefund} disabled={loading || showMarkDone}>
-                {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <><ExternalLink className="h-3 w-3 mr-1" />{t('admin.orders.refund')}</>}
-            </Button>
-            <Button variant="outline" size="sm" onClick={handleProxyRefund} disabled={loading || showMarkDone}>
-                {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <><ExternalLink className="h-3 w-3 mr-1" />{t('admin.orders.refundProxy')}</>}
-            </Button>
-            {showMarkDone && (
-                <Button variant="default" size="sm" onClick={handleMarkDone} disabled={loading}>
-                    {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <><CheckCircle className="h-3 w-3 mr-1" />{t('admin.orders.markRefunded')}</>}
-                </Button>
-            )}
-        </div>
-    )
-}
+    const handleVerify = async () => {
+        setLoading(true)
+        try {
+            // Dynamically import to avoid server-side deps in client if any, but actions are safe.
+            // We need to import the action.
+            // Since it's a client component, we pass the action or import it.
+            // AdminOrdersContent imports deleteOrders from admin-orders, so we can verify.
+            // Wait, RefundButton imports from @/actions/refund. verifyOrderRefundStatus is in admin-orders.
+            // I need to update imports first.
+        } catch (e) { }
+    }
+
