@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react"
 import { createOrder } from "@/actions/checkout"
 import { getUserPoints } from "@/actions/points"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Loader2, Coins } from "lucide-react"
@@ -26,6 +27,7 @@ export function BuyButton({ productId, price, productName, disabled, quantity = 
     const [usePoints, setUsePoints] = useState(false)
     const [pointsLoading, setPointsLoading] = useState(false)
     const [hasAutoOpened, setHasAutoOpened] = useState(false)
+    const [email, setEmail] = useState('')
     const isNavigatingRef = useRef(false)
     const { t } = useI18n()
 
@@ -59,10 +61,10 @@ export function BuyButton({ productId, price, productName, disabled, quantity = 
 
     const handleBuy = async () => {
         if (isNavigatingRef.current) return
-        
+
         try {
             setLoading(true)
-            const result = await createOrder(productId, quantity, undefined, usePoints)
+            const result = await createOrder(productId, quantity, email, usePoints)
 
             if (!result?.success) {
                 const message = result?.error ? t(result.error) : t('common.error')
@@ -90,7 +92,7 @@ export function BuyButton({ productId, price, productName, disabled, quantity = 
             if (params) {
                 // Mark as navigating to prevent React errors on Safari
                 isNavigatingRef.current = true
-                
+
                 // Submit Form immediately without closing dialog
                 const form = document.createElement('form')
                 form.method = 'POST'
@@ -143,6 +145,17 @@ export function BuyButton({ productId, price, productName, disabled, quantity = 
                         <div className="flex justify-between items-center">
                             <span className="font-medium">{t('buy.modal.price')}</span>
                             <span>{numericalPrice.toFixed(2)}</span>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="email">{t('buy.modal.emailLabel')}</Label>
+                            <Input
+                                id="email"
+                                type="email"
+                                placeholder={t('buy.modal.emailPlaceholder') || ''}
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                            />
                         </div>
 
                         {points > 0 && (

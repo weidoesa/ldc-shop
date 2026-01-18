@@ -3,7 +3,8 @@
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { products, cards, reviews, categories } from "@/lib/db/schema"
-import { eq, sql } from "drizzle-orm"
+import { eq, sql, inArray, and, or, isNull, lte } from "drizzle-orm"
+import { sendTelegramMessage } from "@/lib/notifications"
 import { revalidatePath } from "next/cache"
 import { setSetting } from "@/lib/db/queries"
 
@@ -23,7 +24,7 @@ export async function saveProduct(formData: FormData) {
 
     const existingId = formData.get('id') as string
     const customSlug = (formData.get('slug') as string)?.trim()
-    
+
     // Determine product ID
     let id: string
     if (existingId) {
@@ -32,13 +33,13 @@ export async function saveProduct(formData: FormData) {
     } else {
         // New product - use custom slug or generate
         id = customSlug || `prod_${Date.now()}`
-        
+
         // Validate slug format for new products
         if (!/^[a-zA-Z0-9_-]+$/.test(id)) {
             throw new Error("Slug can only contain letters, numbers, underscores and hyphens")
         }
     }
-    
+
     const name = formData.get('name') as string
     const description = formData.get('description') as string
     const price = formData.get('price') as string
@@ -47,6 +48,7 @@ export async function saveProduct(formData: FormData) {
     const image = formData.get('image') as string
     const purchaseLimit = formData.get('purchaseLimit') ? parseInt(formData.get('purchaseLimit') as string) : null
     const isHot = formData.get('isHot') === 'on'
+    const isShared = formData.get('isShared') === 'on'
     const purchaseWarning = (formData.get('purchaseWarning') as string | null)?.trim() || null
 
     const doSave = async () => {
@@ -70,7 +72,8 @@ export async function saveProduct(formData: FormData) {
             image,
             purchaseLimit,
             purchaseWarning,
-            isHot
+            isHot,
+            isShared
         }).onConflictDoUpdate({
             target: products.id,
             set: {
@@ -82,7 +85,8 @@ export async function saveProduct(formData: FormData) {
                 image,
                 purchaseLimit,
                 purchaseWarning,
-                isHot
+                isHot,
+                isShared
             }
         })
     }
@@ -97,6 +101,9 @@ export async function saveProduct(formData: FormData) {
         } catch { /* column exists */ }
         try {
             await db.run(sql.raw(`ALTER TABLE products ADD COLUMN purchase_warning TEXT`));
+        } catch { /* column exists */ }
+        try {
+            await db.run(sql.raw(`ALTER TABLE products ADD COLUMN is_shared INTEGER DEFAULT 0`));
         } catch { /* column exists */ }
     }
 
@@ -198,6 +205,31 @@ export async function deleteCard(cardId: number) {
     }
 
     await db.delete(cards).where(eq(cards.id, cardId))
+
+    revalidatePath('/admin/products')
+    revalidatePath('/admin/settings')
+    revalidatePath('/admin/cards')
+    revalidatePath('/')
+}
+
+export async function deleteCards(cardIds: number[]) {
+    await checkAdmin()
+
+    if (!cardIds.length) return
+
+    const BATCH_SIZE = 100
+    for (let i = 0; i < cardIds.length; i += BATCH_SIZE) {
+        const batch = cardIds.slice(i, i + BATCH_SIZE)
+
+        await db.delete(cards)
+            .where(
+                and(
+                    inArray(cards.id, batch),
+                    or(isNull(cards.isUsed), eq(cards.isUsed, false)),
+                    or(isNull(cards.reservedAt), lte(cards.reservedAt, new Date(Date.now() - 60 * 1000)))
+                )
+            )
+    }
 
     revalidatePath('/admin/products')
     revalidatePath('/admin/settings')
@@ -313,12 +345,12 @@ export async function saveNoIndex(enabled: boolean) {
 
 export async function saveShopFooter(footer: string) {
     await checkAdmin()
-    
+
     const text = footer.trim()
     if (text.length > 500) {
         throw new Error("Footer text is too long")
     }
-    
+
     await setSetting('shop_footer', text)
     revalidatePath('/admin/settings')
     revalidatePath('/')
@@ -328,14 +360,50 @@ const VALID_THEME_COLORS = ['purple', 'blue', 'cyan', 'green', 'orange', 'pink',
 
 export async function saveThemeColor(color: string) {
     await checkAdmin()
-    
+
     if (!VALID_THEME_COLORS.includes(color)) {
         throw new Error("Invalid theme color")
     }
-    
+
     await setSetting('theme_color', color)
     revalidatePath('/admin/settings')
     revalidatePath('/')
+}
+
+export async function saveNotificationSettings(formData: FormData) {
+    await checkAdmin()
+
+    const token = (formData.get('telegramBotToken') as string || '').trim()
+    const chatId = (formData.get('telegramChatId') as string || '').trim()
+    const language = (formData.get('telegramLanguage') as string || 'zh').trim()
+
+    await setSetting('telegram_bot_token', token)
+    await setSetting('telegram_chat_id', chatId)
+    await setSetting('telegram_language', language)
+
+    // Email settings
+    const resendApiKey = (formData.get('resendApiKey') as string || '').trim()
+    const resendFromEmail = (formData.get('resendFromEmail') as string || '').trim()
+    const resendFromName = (formData.get('resendFromName') as string || '').trim()
+    const resendEnabled = formData.get('resendEnabled') === 'true'
+
+    await setSetting('resend_api_key', resendApiKey)
+    await setSetting('resend_from_email', resendFromEmail)
+    await setSetting('resend_from_name', resendFromName)
+    await setSetting('resend_enabled', resendEnabled ? 'true' : 'false')
+
+    revalidatePath('/admin/notifications')
+}
+
+export async function testNotification() {
+    await checkAdmin()
+    return await sendTelegramMessage("🔔 Test notification from LDC Shop")
+}
+
+export async function testEmailNotification(to: string) {
+    await checkAdmin()
+    const { testResendEmail } = await import("@/lib/email")
+    return await testResendEmail(to)
 }
 
 async function ensureCategoriesTable() {

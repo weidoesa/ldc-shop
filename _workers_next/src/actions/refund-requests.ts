@@ -6,6 +6,8 @@ import { orders, refundRequests } from "@/lib/db/schema"
 import { and, desc, eq, sql } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
 import { checkAdmin } from "@/actions/admin"
+import { products } from "@/lib/db/schema"
+import { notifyAdminRefundRequest } from "@/lib/notifications"
 
 async function ensureRefundRequestsTable() {
   await db.run(sql`
@@ -56,6 +58,19 @@ export async function requestRefund(orderId: string, reason: string) {
     status: 'pending',
     createdAt: new Date(),
     updatedAt: new Date(),
+  })
+
+  const product = await db.query.products.findFirst({
+    where: eq(products.id, order.productId),
+    columns: { name: true }
+  })
+
+  await notifyAdminRefundRequest({
+    orderId,
+    productName: product?.name || 'Unknown',
+    amount: order.amount,
+    username: user.username,
+    reason: reason || null
   })
 
   revalidatePath(`/order/${orderId}`)

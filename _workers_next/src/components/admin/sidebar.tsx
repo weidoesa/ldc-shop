@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Package, CreditCard, LogOut, Megaphone, Star, Download, Tags, RotateCcw, Users, Settings, QrCode } from "lucide-react"
+import { Package, CreditCard, LogOut, Megaphone, Star, Download, Tags, RotateCcw, Users, Settings, QrCode, Bell } from "lucide-react"
 import { useI18n } from "@/lib/i18n/context"
 import { signOut } from "next-auth/react"
 
@@ -40,10 +40,13 @@ export function AdminSidebar({ username }: { username: string }) {
                     <Link href="/admin/announcement"><Megaphone className="mr-2 h-4 w-4" />{t('announcement.title')}</Link>
                 </Button>
                 <Button variant="ghost" asChild className="justify-start">
-                    <Link href="/admin/export"><Download className="mr-2 h-4 w-4" />{t('common.dataExport')}</Link>
+                    <Link href="/admin/data"><Download className="mr-2 h-4 w-4" />{t('common.dataExport')}</Link>
                 </Button>
                 <Button variant="ghost" asChild className="justify-start">
                     <Link href="/admin/collect"><QrCode className="mr-2 h-4 w-4" />{t('payment.adminMenu')}</Link>
+                </Button>
+                <Button variant="ghost" asChild className="justify-start">
+                    <Link href="/admin/notifications"><Bell className="mr-2 h-4 w-4" />{t('admin.settings.notifications.title')}</Link>
                 </Button>
             </nav>
             <div className="mt-auto pt-6 border-t">

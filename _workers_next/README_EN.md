@@ -22,44 +22,54 @@ This architecture aims to combine the development efficiency of Next.js with the
 
 
 ## ✨ Features
-- **Modern Stack**: Next.js 16 (App Router), Tailwind CSS, TypeScript.
-- **Vercel Native**: One-click deploy with Vercel Postgres database.
+
+- **Modern Stack**: Next.js 15 (App Router), Tailwind CSS, TypeScript.
+- **Edge Native**: Cloudflare Workers + D1 Database, low cost and high performance.
 - **Linux DO Integration**: Built-in OIDC login and EasyPay payments.
 - **Storefront Experience**:
     - 🔍 **Search & Categories**: Client-side search and category filters.
-    - 📢 **Announcement Banner**: Configurable homepage announcements (supports scheduled start/end).
+    - 📢 **Announcement Banner**: Configurable homepage announcements.
     - 📝 **Markdown Descriptions**: Rich product descriptions.
     - 🔥 **Hot & Discounts**: Hot tag and original/discount price display.
     - ⭐ **Ratings & Reviews**: Verified buyers can rate and review.
     - 📦 **Stock & Sold Counters**: Real-time inventory and sales display.
     - 🚫 **Purchase Limits**: Limit purchases by paid order count.
+    - 🔢 **Quantity Selection**: Support purchasing multiple items.
+    - 🏷️ **Custom Store Name**: Configurable store name in header/title.
 - **Orders & Delivery**:
     - ✅ **Payment Callback Verification**: Signature and amount checks.
     - 🎁 **Auto Delivery**: Card key delivery on payment; paid status retained if out of stock.
+    - 📦 **Multi-Card Delivery**: Display multiple card keys for multi-quantity orders.
     - 🔒 **Stock Reservation**: 5-minute hold after entering checkout to prevent oversell.
     - ⏱️ **Auto-Cancel**: Unpaid orders are cancelled after 5 minutes and stock is released.
     - 🧾 **Order Center**: Order list and details pages.
     - 🔔 **Pending Order Alert**: Homepage banner reminds users of unpaid orders.
-    - 🔄 **Refund Requests**: Users can submit refund requests for admin review (supports client-side & server-side refund).
-    - 💳 **Payment QR**: Admins can generate payment links/QR codes for direct payments without requiring a product.
+    - 🔄 **Refund Requests**: Users can submit refund requests for admin review.
+    - 💳 **Payment QR**: Admins can generate payment links/QR codes for direct payments.
 - **Admin Console**:
     - 📊 **Sales Stats**: Today/week/month/total overview.
     - ⚠️ **Low Stock Alerts**: Configurable threshold and warnings.
-    - 🧩 **Product Management**: Create/edit, enable/disable, reorder, purchase limits, hot tag, discount price.
+    - 🧩 **Product Management**: Create/edit, enable/disable, reorder, purchase limits.
     - 🏷️ **Category Management**: CRUD categories with icons and ordering.
-    - 🗂️ **Card Inventory**: Bulk import (newline/comma) with de-duplication and delete unused card keys.
-    - 🧯 **Stock Self-Heal**: Handles legacy `is_used = NULL` that can cause false out-of-stock, and backfills it to `false`.
-    - 📦 **Total Stock Display**: Homepage shows "Available + Locked" stock to prevent perceived sell-outs.
-    - 💳 **Orders & Refunds**: Pagination/search/filters, order detail, mark paid/delivered/cancel, client-mode refund + optional server proxy.
+    - 🗂️ **Card Inventory**: Bulk import and bulk delete unused card keys.
+    - 💳 **Order Management**: Pagination/search/filters, order detail, mark paid/delivered/cancel.
     - 🧹 **Order Cleanup**: Bulk select and bulk delete.
     - ⭐ **Review Management**: Search and delete reviews.
-    - 📦 **Data Export**: Export orders/products/reviews/settings; full dump JSON + D1 SQL.
+    - 📦 **Data Management**: Full SQL export (D1 compatible), import from Vercel SQL.
     - 📣 **Announcements**: Homepage announcement management.
-    - 🏷️ **Store Name**: Editable in admin and reflected in header/title.
+    - 👥 **Customer Management**: View customers, manage points, block/unblock.
+    - 🔔 **Update Check**: Admin panel auto-detects new versions.
+- **Points System**:
+    - ✨ **Daily Check-in**: Users earn points by daily check-in.
+    - 💰 **Points Discount**: Use points to offset purchase amounts.
+    - 🎁 **Points Payment**: If points cover full amount, no payment gateway needed.
 - **I18n & Theme**:
     - 🌐 **English/Chinese switcher**.
     - 🌓 **Light/Dark/System themes**.
-    - ⏱️ **Auto Update (Upstream Sync)**: GitHub Actions workflow included for Fork users to auto-sync upstream changes and trigger Vercel deploy.
+    - ⏱️ **Auto Update**: GitHub Actions workflow for upstream sync.
+- **Notifications**:
+    - 📧 **Delivery Email**: Send order delivery notifications via Resend.
+    - 📢 **Telegram Notifications**: New order push notifications via Telegram Bot.
 
 ## 🚀 One-Click Deploy
 

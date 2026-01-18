@@ -79,11 +79,13 @@ const getDb = () => {
     // 2. Local fallback (Sync)
     try {
         // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const Database = require('better-sqlite3');
         // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const { drizzle: drizzleSqlite } = require('drizzle-orm/better-sqlite3');
-        const sqlite = new Database(process.env.LOCAL_DB_PATH || 'local.sqlite');
-        return drizzleSqlite(sqlite, { schema });
+        // const Database = require('better-sqlite3');
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        // const { drizzle: drizzleSqlite } = require('drizzle-orm/better-sqlite3');
+        // const sqlite = new Database(process.env.LOCAL_DB_PATH || 'local.sqlite');
+        // return drizzleSqlite(sqlite, { schema });
+        throw new Error("Local SQLite not supported in this build")
     } catch (e) {
         // Fallback to D1 proxy if better-sqlite3 fails (e.g. inside `next build` which might run in node mode but target edge)
         console.warn('Local SQLite failed, falling back to D1 Proxy', e);

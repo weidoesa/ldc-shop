@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
-import { orders, reviews, settings } from "@/lib/db/schema"
+import { orders, reviews, settings, products, cards, loginUsers, categories, refundRequests, dailyCheckins } from "@/lib/db/schema"
 import { and, desc, eq, or, sql } from "drizzle-orm"
 import { getProducts } from "@/lib/db/queries"
 
@@ -45,7 +45,11 @@ function escapeString(val: string): string {
 function formatSqlValue(val: any): string {
   if (val === null || val === undefined) return "NULL"
   if (typeof val === "boolean") return val ? "1" : "0"
-  if (val instanceof Date) return "'" + val.toISOString().replace("T", " ").replace("Z", "") + "'"
+  if (val instanceof Date) {
+    // Check if valid date
+    if (isNaN(val.getTime())) return "NULL"
+    return "'" + val.toISOString().replace("T", " ").replace("Z", "") + "'"
+  }
   if (typeof val === "number") return String(val)
   if (typeof val === "string") return escapeString(val)
   return escapeString(JSON.stringify(val))
@@ -252,12 +256,15 @@ export async function GET(req: Request) {
     if (type === "full") {
       const full: Record<string, any[]> = {}
       const tables: Array<[string, () => Promise<any[]>]> = [
-        ["products", () => db.query.products.findMany()],
-        ["cards", () => db.query.cards.findMany()],
-        ["orders", () => db.query.orders.findMany()],
-        ["reviews", () => db.query.reviews.findMany()],
-        ["settings", () => db.query.settings.findMany()],
-        ["login_users", () => db.query.loginUsers.findMany()],
+        ["products", () => db.select().from(products).all()],
+        ["cards", () => db.select().from(cards).all()],
+        ["orders", () => db.select().from(orders).all()],
+        ["reviews", () => db.select().from(reviews).all()],
+        ["settings", () => db.select().from(settings).all()],
+        ["login_users", () => db.select().from(loginUsers).all()],
+        ["categories", () => db.select().from(categories).all()],
+        ["refund_requests", () => db.select().from(refundRequests).all()],
+        ["daily_checkins_v2", () => db.select().from(dailyCheckins).all()],
       ]
 
       for (const [tableName, fetcher] of tables) {
@@ -288,9 +295,13 @@ export async function GET(req: Request) {
         // Map camelCase keys to snake_case for SQL export
         const columnMapping: Record<string, string> = {
           // Products
+          compareAtPrice: 'compare_at_price',
+          isHot: 'is_hot',
           isActive: 'is_active',
+          isShared: 'is_shared',
           sortOrder: 'sort_order',
           purchaseLimit: 'purchase_limit',
+          purchaseWarning: 'purchase_warning',
           createdAt: 'created_at',
           // Cards
           productId: 'product_id',
@@ -306,12 +317,21 @@ export async function GET(req: Request) {
           paidAt: 'paid_at',
           deliveredAt: 'delivered_at',
           userId: 'user_id',
+          pointsUsed: 'points_used',
+          currentPaymentId: 'current_payment_id',
           // Reviews
           // orderId, productId, userId already covered
           // Settings
           updatedAt: 'updated_at',
           // Login Users
-          lastLoginAt: 'last_login_at'
+          lastLoginAt: 'last_login_at',
+          isBlocked: 'is_blocked',
+          // Categories
+          // icon, sortOrder already covered or simple
+          // Refund Requests
+          adminUsername: 'admin_username',
+          adminNote: 'admin_note',
+          processedAt: 'processed_at',
         }
 
         for (const [tableName, rows] of Object.entries(full)) {

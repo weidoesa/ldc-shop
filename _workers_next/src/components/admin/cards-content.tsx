@@ -4,7 +4,9 @@ import { useI18n } from "@/lib/i18n/context"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { addCards, deleteCard } from "@/actions/admin"
+import { addCards, deleteCard, deleteCards } from "@/actions/admin"
+import { Checkbox } from "@/components/ui/checkbox"
+import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { toast } from "sonner"
 import { CopyButton } from "@/components/copy-button"
@@ -25,6 +27,38 @@ interface CardsContentProps {
 export function CardsContent({ productId, productName, unusedCards }: CardsContentProps) {
     const { t } = useI18n()
     const router = useRouter()
+    const [selectedIds, setSelectedIds] = useState<number[]>([])
+
+    const toggleSelectAll = () => {
+        if (selectedIds.length === unusedCards.length) {
+            setSelectedIds([])
+        } else {
+            setSelectedIds(unusedCards.map(c => c.id))
+        }
+    }
+
+    const toggleSelect = (id: number) => {
+        setSelectedIds(prev =>
+            prev.includes(id)
+                ? prev.filter(pid => pid !== id)
+                : [...prev, id]
+        )
+    }
+
+    const handleBatchDelete = async () => {
+        if (!selectedIds.length) return
+
+        if (confirm(t('admin.cards.confirmBatchDelete', { count: selectedIds.length }))) {
+            try {
+                await deleteCards(selectedIds)
+                toast.success(t('common.success'))
+                setSelectedIds([])
+                router.refresh()
+            } catch (e: any) {
+                toast.error(e.message)
+            }
+        }
+    }
 
     const handleSubmit = async (formData: FormData) => {
         try {
@@ -67,12 +101,43 @@ export function CardsContent({ productId, productName, unusedCards }: CardsConte
                         <CardTitle>{t('admin.cards.available')}</CardTitle>
                     </CardHeader>
                     <CardContent className="max-h-[400px] overflow-y-auto space-y-2">
+                        {unusedCards.length > 0 && (
+                            <div className="flex items-center justify-between pb-2 mb-2 border-b sticky top-0 bg-background z-10">
+                                <div className="flex items-center gap-2">
+                                    <Checkbox
+                                        checked={selectedIds.length === unusedCards.length && unusedCards.length > 0}
+                                        onCheckedChange={toggleSelectAll}
+                                        id="select-all"
+                                    />
+                                    <label htmlFor="select-all" className="text-sm cursor-pointer select-none">
+                                        {t('admin.cards.selectAll')}
+                                        {selectedIds.length > 0 && <span className="ml-2 text-muted-foreground text-xs">({t('admin.cards.selectedCount', { count: selectedIds.length })})</span>}
+                                    </label>
+                                </div>
+                                {selectedIds.length > 0 && (
+                                    <Button
+                                        variant="destructive"
+                                        size="sm"
+                                        className="h-7 text-xs"
+                                        onClick={handleBatchDelete}
+                                    >
+                                        {t('admin.cards.batchDelete')}
+                                    </Button>
+                                )}
+                            </div>
+                        )}
                         {unusedCards.length === 0 ? (
                             <div className="text-center py-10 text-muted-foreground text-sm">{t('admin.cards.noCards')}</div>
                         ) : (
                             unusedCards.map(c => (
-                                <div key={c.id} className="flex items-center justify-between p-2 rounded bg-muted/40 text-sm font-mono gap-2">
-                                    <CopyButton text={c.cardKey} truncate maxLength={30} />
+                                <div key={c.id} className="flex items-center justify-between p-2 rounded bg-muted/40 text-sm font-mono gap-2 animate-in fade-in transition-colors hover:bg-muted/60">
+                                    <div className="flex items-center gap-3">
+                                        <Checkbox
+                                            checked={selectedIds.includes(c.id)}
+                                            onCheckedChange={() => toggleSelect(c.id)}
+                                        />
+                                        <CopyButton text={c.cardKey} truncate maxLength={30} />
+                                    </div>
                                     <Button
                                         variant="ghost"
                                         size="icon"

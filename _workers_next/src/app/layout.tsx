@@ -39,6 +39,18 @@ export async function generateMetadata(): Promise<Metadata> {
     title: shopName?.trim() || DEFAULT_TITLE,
     description: shopDescription?.trim() || DEFAULT_DESCRIPTION,
     robots: noIndex ? { index: false, follow: false } : undefined,
+    manifest: "/manifest.json",
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: "black-translucent",
+      title: shopName?.trim() || DEFAULT_TITLE,
+    },
+    formatDetection: {
+      telephone: false,
+    },
+    other: {
+      "mobile-web-app-capable": "yes",
+    },
   };
 
   // Add custom favicon if logo is set
