@@ -199,11 +199,11 @@ export async function addCards(formData: FormData) {
         const minutes = minutesRaw === '' ? 0 : Number(minutesRaw)
         const validInts = Number.isInteger(hours) && Number.isInteger(minutes)
         if (!validInts || hours < 0 || minutes < 0 || minutes > 59) {
-            throw new Error("Invalid expiry duration")
+            return { success: false, error: "admin.cards.expiryInvalid" }
         }
         const totalMinutes = hours * 60 + minutes
         if (totalMinutes <= 0) {
-            throw new Error("Invalid expiry duration")
+            return { success: false, error: "admin.cards.expiryInvalid" }
         }
         expiresInMs = totalMinutes * 60 * 1000
     }
@@ -215,7 +215,7 @@ export async function addCards(formData: FormData) {
         .map(c => c.trim())
         .filter(c => c)
 
-    if (cardList.length === 0) return
+    if (cardList.length === 0) return { success: true }
 
     // D1 has a limit on SQL variables (around 100 bindings per query)
     // Drizzle generates bindings for all columns (~8), so 100/8 ≈ 12 max
@@ -242,6 +242,8 @@ export async function addCards(formData: FormData) {
     revalidatePath('/')
     updateTag('home:products')
     updateTag('home:product-categories')
+
+    return { success: true }
 }
 
 export async function deleteCard(cardId: number) {

@@ -2,9 +2,10 @@ import { notFound } from "next/navigation"
 import { auth } from "@/lib/auth"
 import { BuyContent } from "@/components/buy-content"
 import { BuyRestricted } from "@/components/buy-restricted"
-import { cancelExpiredOrders, cleanupExpiredCardsIfNeeded, getProduct, getProductReviews, getProductRating, canUserReview, getProductVisibility } from "@/lib/db/queries"
+import { cancelExpiredOrders, cleanupExpiredCardsIfNeeded, getProduct, getProductReviews, getProductRating, canUserReview, getProductVisibility, getLiveCardStats } from "@/lib/db/queries"
 import { getEmailSettings } from "@/lib/email"
 import { cacheLife, cacheTag } from "next/cache"
+import { INFINITE_STOCK } from "@/lib/constants"
 
 interface BuyPageProps {
     params: Promise<{ id: string }>
@@ -73,11 +74,20 @@ export default async function BuyPage({ params }: BuyPageProps) {
         }
     }
 
+    const liveStats = product ? await getLiveCardStats([product.id]).catch(() => new Map()) : new Map()
+    const stat = product ? liveStats.get(product.id) : undefined
+    const liveAvailable = product
+        ? (product.isShared
+            ? ((stat?.unused || 0) > 0 ? INFINITE_STOCK : 0)
+            : (stat?.available ?? product.stock ?? 0))
+        : 0
+    const liveLocked = stat?.locked ?? product?.locked ?? 0
+
     return (
         <BuyContent
             product={product}
-            stockCount={product.stock || 0}
-            lockedStockCount={product.locked || 0}
+            stockCount={liveAvailable}
+            lockedStockCount={liveLocked}
             isLoggedIn={!!session?.user}
             reviews={reviews}
             averageRating={Number(product.rating || 0)}

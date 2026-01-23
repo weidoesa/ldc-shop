@@ -663,6 +663,47 @@ export async function recalcProductAggregatesForMany(productIds: string[]) {
     }
 }
 
+export async function getLiveCardStats(productIds: string[]): Promise<Map<string, { unused: number; available: number; locked: number }>> {
+    const ids = Array.from(new Set((productIds || []).map((id) => String(id).trim()).filter(Boolean)));
+    const stats = new Map<string, { unused: number; available: number; locked: number }>();
+    if (!ids.length) return stats;
+
+    try {
+        await ensureCardsColumns();
+    } catch (error: any) {
+        if (isMissingTableOrColumn(error)) return stats;
+        throw error;
+    }
+
+    const nowMs = Date.now();
+    const fiveMinutesAgo = nowMs - RESERVATION_TTL_MS;
+
+    try {
+        const rows = await db.select({
+            productId: cards.productId,
+            unused: sql<number>`COALESCE(SUM(CASE WHEN COALESCE(${cards.isUsed}, 0) = 0 AND (${cards.expiresAt} IS NULL OR ${cards.expiresAt} > ${nowMs}) THEN 1 ELSE 0 END), 0)`,
+            available: sql<number>`COALESCE(SUM(CASE WHEN COALESCE(${cards.isUsed}, 0) = 0 AND (${cards.expiresAt} IS NULL OR ${cards.expiresAt} > ${nowMs}) AND (${cards.reservedAt} IS NULL OR ${cards.reservedAt} < ${fiveMinutesAgo}) THEN 1 ELSE 0 END), 0)`,
+            locked: sql<number>`COALESCE(SUM(CASE WHEN COALESCE(${cards.isUsed}, 0) = 0 AND (${cards.expiresAt} IS NULL OR ${cards.expiresAt} > ${nowMs}) AND ${cards.reservedAt} IS NOT NULL AND ${cards.reservedAt} >= ${fiveMinutesAgo} THEN 1 ELSE 0 END), 0)`
+        })
+            .from(cards)
+            .where(inArray(cards.productId, ids))
+            .groupBy(cards.productId);
+
+        for (const row of rows) {
+            if (!row.productId) continue;
+            stats.set(row.productId, {
+                unused: Number(row.unused || 0),
+                available: Number(row.available || 0),
+                locked: Number(row.locked || 0),
+            });
+        }
+    } catch (error: any) {
+        if (!isMissingTableOrColumn(error)) throw error;
+    }
+
+    return stats;
+}
+
 async function backfillProductAggregates() {
     const already = await isProductAggregatesBackfilled();
     if (already) return;
@@ -1219,6 +1260,7 @@ export async function searchActiveProducts(params: {
             image: products.image,
             category: products.category,
             isHot: products.isHot,
+            isShared: products.isShared,
             purchaseLimit: products.purchaseLimit,
             stock: sql<number>`COALESCE(${products.stockCount}, 0)`,
             locked: sql<number>`COALESCE(${products.lockedCount}, 0)`,

@@ -1,8 +1,9 @@
-import { getActiveProductCategories, getCategories, getActiveProducts, getVisitorCount, getUserPendingOrders, getSetting } from "@/lib/db/queries";
+import { getActiveProductCategories, getCategories, getActiveProducts, getVisitorCount, getUserPendingOrders, getSetting, getLiveCardStats } from "@/lib/db/queries";
 import { getActiveAnnouncement } from "@/actions/settings";
 import { auth } from "@/lib/auth";
 import { HomeContent } from "@/components/home-content";
 import { cacheLife, cacheTag } from "next/cache";
+import { INFINITE_STOCK } from "@/lib/constants";
 
 const TAG_PRODUCTS = "home:products";
 const TAG_RATINGS = "home:ratings";
@@ -92,6 +93,8 @@ export default async function Home({
 
   const total = products.length;
 
+  const liveStats = await getLiveCardStats(products.map((p: any) => p.id)).catch(() => new Map());
+
   /* REMOVED: Separate ratings fetch - using pre-computed values in product table
   const productIds = products.map((p: any) => p.id).filter(Boolean);
   const sortedIds = [...productIds].sort();
@@ -108,10 +111,16 @@ export default async function Home({
   */
 
   const productsWithRatings = products.map((p: any) => {
+    const stat = liveStats.get(p.id);
+    const available = p.isShared
+      ? ((stat?.unused || 0) > 0 ? INFINITE_STOCK : 0)
+      : (stat?.available ?? p.stock ?? 0);
+    const locked = stat?.locked ?? p.locked ?? 0;
+    const stockTotal = available >= INFINITE_STOCK ? INFINITE_STOCK : (available + locked);
     // const rating = ratingsMap.get(p.id) || { average: 0, count: 0 };
     return {
       ...p,
-      stockCount: p.stock + (p.locked || 0),
+      stockCount: stockTotal,
       soldCount: p.sold || 0,
       descriptionPlain: stripMarkdown(p.description || ''),
       rating: Number(p.rating || 0),

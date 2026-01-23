@@ -82,13 +82,17 @@ export function CardsContent({ productId, productName, unusedCards }: CardsConte
         submitLock.current = true
         setSubmitting(true)
         try {
-            await addCards(formData)
+            const result = await addCards(formData)
+            if (result && result.success === false) {
+                toast.error(t(result.error || 'common.error'))
+                return
+            }
             toast.success(t('common.success'))
             router.refresh()
             formRef.current?.reset()
             setPendingCount(0)
         } catch (e: any) {
-            toast.error(e.message)
+            toast.error(e?.message || t('common.error'))
         } finally {
             setSubmitting(false)
             submitLock.current = false
@@ -156,7 +160,7 @@ export function CardsContent({ productId, productName, unusedCards }: CardsConte
                                     </div>
                                     <div className="space-y-1">
                                         <label className="text-xs text-muted-foreground">{t('admin.cards.expiryMinutes')}</label>
-                                        <Input name="expires_minutes" type="number" min="0" step="1" disabled={submitting} />
+                                        <Input name="expires_minutes" type="number" min="0" max="59" step="1" disabled={submitting} />
                                     </div>
                                 </div>
                                 <p className="text-xs text-muted-foreground">{t('admin.cards.expiryHint')}</p>

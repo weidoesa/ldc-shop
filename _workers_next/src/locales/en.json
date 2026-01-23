@@ -550,6 +550,7 @@
             "expiryHours": "Hours",
             "expiryMinutes": "Minutes",
             "expiryHint": "Only positive integers. Leave empty for no expiry.",
+            "expiryInvalid": "Invalid expiry duration. Use hours and minutes (0-59).",
             "available": "Available",
             "used": "Used",
             "noCards": "No cards",

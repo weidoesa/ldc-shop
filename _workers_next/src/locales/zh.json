@@ -550,6 +550,7 @@
             "expiryHours": "小时",
             "expiryMinutes": "分钟",
             "expiryHint": "仅支持正整数，留空表示永久有效。",
+            "expiryInvalid": "有效期不合法，请填写小时与分钟（分钟 0-59）。",
             "available": "可用",
             "used": "已使用",
             "noCards": "暂无卡密",
