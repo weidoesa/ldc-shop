@@ -23,6 +23,12 @@
 > 
 > 👉 **[查看 Workers 部署指南 → `_workers_next/README.md`](./_workers_next/README.md)**
 
+## 📢 登录状态公告（2026-03-04）
+
+目前我们确认：`Linux DO Connect` 的 OAuth 登录在部分部署环境中，可能在 `token` 交换阶段被上游 Cloudflare 防护拦截，导致授权后无法完成登录。
+
+我们正在持续跟进该问题，并将在后续版本中加入其他登录方式。请耐心等待更新公告，感谢理解与支持。
+
 ## ✨ 特性
 - **现代技术栈**: Next.js 16 (App Router), Tailwind CSS, TypeScript.
 - **Vercel 原生**: 一键部署，自动配置 Vercel Postgres 数据库。
